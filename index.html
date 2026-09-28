@@ -1,0 +1,505 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flipbook Sepak Bola</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: white;
+    background:
+        radial-gradient(circle at top, #176b3a, #061b12 75%);
+    min-height: 100vh;
+    text-align: center;
+}
+
+header {
+    padding: 25px 10px 5px;
+}
+
+header h1 {
+    margin-bottom: 8px;
+    color: #b8ff78;
+}
+
+header p {
+    color: #d8eadb;
+}
+
+.book-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 25px 12px;
+    perspective: 1800px;
+}
+
+.book {
+    position: relative;
+    width: min(440px, 90vw);
+    height: 570px;
+    transform-style: preserve-3d;
+}
+
+.page {
+    position: absolute;
+    inset: 0;
+    background: #fffdf2;
+    color: #183a27;
+    border-radius: 5px 14px 14px 5px;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    transition: transform 0.8s ease;
+    box-shadow: 0 5px 18px #0007;
+}
+
+.page.flipped {
+    transform: rotateY(-180deg);
+}
+
+.face {
+    position: absolute;
+    inset: 0;
+    padding: 32px 25px;
+    overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border: 1px solid #dedccf;
+    border-radius: 5px 14px 14px 5px;
+}
+
+.front {
+    background: linear-gradient(145deg, #fffef5, #eaf5df);
+}
+
+.back {
+    transform: rotateY(180deg);
+    background: #f6f8e9;
+}
+
+.cover {
+    background:
+        linear-gradient(#073d25bb, #052516ee),
+        repeating-linear-gradient(
+            90deg, #258447 0 35px, #176b36 35px 70px
+        );
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.ball {
+    font-size: 90px;
+    margin: 15px;
+    filter: drop-shadow(0 5px 5px #0006);
+}
+
+.cover h2 {
+    font-size: 35px;
+    color: #c9ff8b;
+    margin: 10px 0;
+}
+
+.cover p {
+    letter-spacing: 2px;
+}
+
+h2 {
+    color: #14743c;
+    margin-top: 0;
+}
+
+h3 {
+    color: #21834b;
+}
+
+p, li {
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+ul {
+    padding-left: 20px;
+}
+
+.field {
+    margin: 20px auto;
+    width: 90%;
+    height: 150px;
+    border: 3px solid #27824a;
+    background: repeating-linear-gradient(
+        90deg, #80c66c 0 35px, #6ab65a 35px 70px
+    );
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 55px;
+}
+
+.field::before {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    border: 2px solid white;
+    pointer-events: none;
+}
+
+.number {
+    position: absolute;
+    bottom: 15px;
+    right: 20px;
+    font-size: 12px;
+    color: #64816b;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 5px 10px 20px;
+}
+
+button {
+    border: none;
+    border-radius: 9px;
+    padding: 12px 22px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #baff78;
+    color: #12351e;
+    transition: 0.2s;
+}
+
+button:hover {
+    background: white;
+    transform: translateY(-2px);
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+#counter {
+    margin: 5px 0 30px;
+    color: #d7f7d7;
+}
+
+footer {
+    padding: 15px;
+    font-size: 12px;
+    color: #c1d9c5;
+}
+
+@media (max-width: 480px) {
+    .book {
+        height: 510px;
+    }
+
+    .face {
+        padding: 25px 19px;
+    }
+
+    .cover h2 {
+        font-size: 28px;
+    }
+
+    p, li {
+        font-size: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page {
+        transition: none;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>⚽ FOOTBALL FLIPBOOK</h1>
+    <p>Jelajahi dunia sepak bola melalui buku interaktif!</p>
+</header>
+
+<div class="book-area">
+    <div class="book" id="book"></div>
+</div>
+
+<div class="controls">
+    <button id="prev" onclick="previousPage()">
+        ⬅ Sebelumnya
+    </button>
+
+    <button id="next" onclick="nextPage()">
+        Berikutnya ➡
+    </button>
+</div>
+
+<p id="counter">Halaman 1 dari 10</p>
+
+<footer>
+    Dibuat dengan HTML, CSS, dan JavaScript | Tema Sepak Bola ⚽
+</footer>
+
+<script>
+const pages = [
+    {
+        front: `
+            <div class="cover">
+                <div class="ball">⚽</div>
+                <h2>THE WORLD<br>OF FOOTBALL</h2>
+                <p>SEMANGAT • KERJA SAMA • SPORTIVITAS</p>
+                <h2>MUHAMMAD EVAN R.M (20) </h2>
+                <p>FLIPBOOK SEPAK BOLA</p>
+            </div>`,
+        back: `
+            <h2>Selamat Datang!</h2>
+            
+            <p>Sepak bola adalah olahraga yang dimainkan
+            oleh dua tim yang berusaha mencetak gol
+            ke gawang lawan.</p>
+            <div class="field">⚽</div>
+            <h3>Apa yang akan dipelajari?</h3>
+            <ul>
+                <li>Sejarah sepak bola</li>
+                <li>Teknik dasar</li>
+                <li>Posisi pemain</li>
+                <li>Peraturan permainan</li>
+            </ul>
+            <span class="number">01</span>`
+    },
+    {
+        front: `
+            <h2>📜 Sejarah Sepak Bola</h2>
+            <p>Sepak bola modern berkembang di Inggris
+            pada abad ke-19.</p>
+            <p>Pada tahun 1863, Football Association
+            dibentuk di Inggris untuk menyusun
+            aturan permainan.</p>
+            <p>Seiring waktu, sepak bola menyebar
+            ke berbagai negara dan menjadi olahraga
+            yang dimainkan di seluruh dunia.</p>
+            <div class="field">🏟️</div>
+            <span class="number">02</span>`,
+        back: `
+            <h2>🌍 Sepak Bola Dunia</h2>
+            <p>FIFA didirikan pada tahun 1904 sebagai
+            organisasi sepak bola internasional.</p>
+            <p>Piala Dunia FIFA pertama untuk tim
+            nasional putra diselenggarakan di Uruguay
+            pada tahun 1930.</p>
+            <h3>Fakta menarik</h3>
+            <ul>
+                <li>Sepak bola dimainkan di banyak negara.</li>
+                <li>Ada kompetisi tingkat klub dan negara.</li>
+                <li>Kerja sama menjadi bagian penting
+                dalam permainan.</li>
+            </ul>
+            <span class="number">03</span>`
+    },
+    {
+        front: `
+            <h2>⚽ Teknik Dasar</h2>
+            <h3>1. Passing</h3>
+            <p>Mengoper bola kepada rekan satu tim.</p>
+            <h3>2. Dribbling</h3>
+            <p>Menggiring bola sambil bergerak.</p>
+            <h3>3. Shooting</h3>
+            <p>Menendang bola ke arah gawang
+            untuk mencetak gol.</p>
+            <h3>4. Control</h3>
+            <p>Menghentikan dan menguasai bola.</p>
+            <span class="number">04</span>`,
+        back: `
+            <h2>🎯 Latihan Teknik</h2>
+            <p>Teknik dasar dapat dilatih secara bertahap
+            dengan memperhatikan keselamatan.</p>
+            <ul>
+                <li>Berlatih mengoper dengan teman.</li>
+                <li>Berlatih menggiring melewati cone.</li>
+                <li>Berlatih menembak ke target.</li>
+                <li>Berlatih menerima bola dengan baik.</li>
+            </ul>
+            <div class="field">🥅</div>
+            <p>Latihan rutin membantu meningkatkan
+            koordinasi dan penguasaan bola.</p>
+            <span class="number">05</span>`
+    },
+    {
+        front: `
+            <h2>👥 Posisi Pemain</h2>
+            <h3>Penjaga gawang</h3>
+            <p>Menjaga gawang agar tidak kebobolan.</p>
+            <h3>Pemain bertahan</h3>
+            <p>Menghalau serangan lawan.</p>
+            <h3>Pemain tengah</h3>
+            <p>Menghubungkan pertahanan dan serangan.</p>
+            <h3>Pemain depan</h3>
+            <p>Membantu menciptakan peluang dan gol.</p>
+            <span class="number">06</span>`,
+        back: `
+            <h2>🟩 Formasi Tim</h2>
+            <p>Formasi menggambarkan susunan pemain
+            di lapangan.</p>
+            <div class="field">
+                <div style="font-size:17px;line-height:2">
+                    ⚽ ⚽ ⚽<br>
+                    ⚽ ⚽ ⚽ ⚽<br>
+                    ⚽ ⚽<br>
+                    🧤
+                </div>
+            </div>
+            <p>Contoh formasi yang sering digunakan
+            adalah 4-4-2 dan 4-3-3.</p>
+            <p>Susunan pemain dapat berubah sesuai
+            strategi dan situasi pertandingan.</p>
+            <span class="number">07</span>`
+    },
+    {
+        front: `
+            <h2>📋 Peraturan Dasar</h2>
+            <ul>
+                <li>Setiap tim biasanya menurunkan
+                11 pemain, termasuk penjaga gawang.</li>
+                <li>Pemain selain penjaga gawang
+                tidak boleh sengaja memainkan bola
+                dengan tangan atau lengan.</li>
+                <li>Gol terjadi ketika seluruh bola
+                melewati garis gawang di antara tiang
+                dan di bawah mistar, sesuai aturan.</li>
+                <li>Wasit memimpin jalannya pertandingan.</li>
+                <li>Pelanggaran dapat menghasilkan
+                tendangan bebas atau penalti.</li>
+            </ul>
+            <span class="number">08</span>`,
+        back: `
+            <h2>🟨 Wasit dan Kartu</h2>
+            <h3>Kartu kuning</h3>
+            <p>Peringatan kepada pemain atas
+            pelanggaran tertentu.</p>
+            <h3>Kartu merah</h3>
+            <p>Pemain dikeluarkan dari pertandingan.</p>
+            <h3>Offside</h3>
+            <p>Aturan yang membatasi posisi pemain
+            penyerang saat terlibat aktif dalam
+            permainan. Tidak semua posisi di depan
+            bek terakhir merupakan offside.</p>
+            <p>Wasit menggunakan Laws of the Game
+            sebagai pedoman pertandingan.</p>
+            <span class="number">09</span>`
+    },
+    {
+        front: `
+            <div class="cover">
+                <div class="ball">🏆</div>
+                <h2>PLAY FAIR!</h2>
+                <p>KERJA SAMA ADALAH KEKUATAN</p>
+                <h3 style="color:white">Terima Kasih!</h3>
+                <p>Terus belajar dan bermain sportif.</p>
+            </div>`,
+        back: `
+            <h2>Referensi</h2>
+            <p>Untuk mempelajari sepak bola lebih lanjut,
+            kunjungi sumber resmi berikut:</p>
+            <p><b>FIFA</b><br>
+            <a href="https://www.fifa.com/"
+            target="_blank" rel="noopener">
+            www.fifa.com
+            </a></p>
+            <p><b>The IFAB</b><br>
+            <a href="https://www.theifab.com/"
+            target="_blank" rel="noopener">
+            www.theifab.com
+            </a></p>
+            <p>Flipbook ini dibuat untuk tujuan
+            edukasi tentang olahraga sepak bola.</p>
+            <span class="number">10</span>`
+    }
+];
+
+const book = document.getElementById("book");
+const prevButton = document.getElementById("prev");
+const nextButton = document.getElementById("next");
+const counter = document.getElementById("counter");
+
+let currentPage = 0;
+
+pages.forEach((item, index) => {
+    const page = document.createElement("div");
+    page.className = "page";
+    page.style.zIndex = pages.length - index;
+
+    page.innerHTML = `
+        <div class="face front">${item.front}</div>
+        <div class="face back">${item.back}</div>
+    `;
+
+    book.appendChild(page);
+});
+
+const pageElements = document.querySelectorAll(".page");
+
+function updateBook() {
+    pageElements.forEach((page, index) => {
+        if (index < currentPage) {
+            page.classList.add("flipped");
+            page.style.zIndex = index + 1;
+        } else {
+            page.classList.remove("flipped");
+            page.style.zIndex = pages.length - index;
+        }
+    });
+
+    prevButton.disabled = currentPage === 0;
+    nextButton.disabled = currentPage === pages.length;
+
+    const visiblePage = Math.min(
+        currentPage * 2 + 1,
+        pages.length * 2
+    );
+
+    counter.textContent =
+        `Halaman ${visiblePage} dari ${pages.length * 2}`;
+}
+
+function nextPage() {
+    if (currentPage < pages.length) {
+        currentPage++;
+        updateBook();
+    }
+}
+
+function previousPage() {
+    if (currentPage > 0) {
+        currentPage--;
+        updateBook();
+    }
+}
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "ArrowRight") nextPage();
+    if (event.key === "ArrowLeft") previousPage();
+});
+
+updateBook();
+</script>
+
+</body>
+</html>
